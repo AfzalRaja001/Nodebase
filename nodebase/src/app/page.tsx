@@ -1,15 +1,14 @@
-import React from 'react';
-import { caller } from '@/trpc/server';
-import { useTRPC } from '@/trpc/client';
+import { requireAuth } from "@/lib/auth-utils";
 
 const Page = async () => {
-
+  await requireAuth();
   return (
     
     <div>
       Hello
+      
     </div>
   );
-};
+}; 
 
 export default Page;
