@@ -93,6 +93,10 @@ export function RegistrationForm(){
                                            type="button"
                                            disabled = {isPending}
                                         >
+                                            <img alt="Github"
+                                            src="/logos/github.svg" width={20} height={20}
+                                            className="dark:invert"
+                                            />
                                             Continue with GitHub
                                         </Button>
                                          <Button
@@ -101,6 +105,10 @@ export function RegistrationForm(){
                                            type="button"
                                            disabled = {isPending}
                                         >
+                                            <img alt="Google"
+                                            src="/logos/google.svg" width={20} height={20}
+                                            className="dark:invert"
+                                            />
                                             Continue with Google
                                         </Button>
                                     </div>
