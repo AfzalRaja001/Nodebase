@@ -13,22 +13,39 @@ export const execute = inngest.createFunction(
   { event: "execute/ai" },
 
   async ({ event, step }) => {
+
+
     const {steps: geminiSteps} = await step.ai.wrap("gemini-generate-text", generateText,{
       model: google("gemini-2.5-flash"),
       system: "You are a helpful assistant that helps users.",
       prompt: "What is inngest?",
+      experimental_telemetry: {
+        isEnabled: true,
+        recordInputs: true,
+        recordOutputs: true,
+      },
     });
 
     const {steps: openaiSteps} = await step.ai.wrap("openai-generate-text", generateText,{
       model: openai("gpt-4"),
       system: "You are a helpful assistant that helps users.",
       prompt: "What is inngest?",
+      experimental_telemetry: {
+        isEnabled: true,
+        recordInputs: true,
+        recordOutputs: true,
+      },
     });
 
     const {steps: anthropicSteps} = await step.ai.wrap("anthropic-generate-text", generateText,{
       model: anthropic("claude-2"),
       system: "You are a helpful assistant that helps users.",
       prompt: "What is inngest?",
+      experimental_telemetry: {
+        isEnabled: true,
+        recordInputs: true,
+        recordOutputs: true,
+      },
     });
   
     return {

@@ -45,3 +45,6 @@ next-env.d.ts
 # Windows reserved filenames
 nul
 mprocs.log
+
+# Sentry Config File
+.env.sentry-build-plugin
