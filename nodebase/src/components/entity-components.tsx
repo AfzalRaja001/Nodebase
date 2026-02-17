@@ -280,7 +280,7 @@ export const EntityItem = ({
                             <CardTitle className="text-base font-medium">
                                 {title}
                             </CardTitle>
-                            {!!!subtitle && (
+                            {subtitle && (
                                 <CardDescription className="text-xs">
                                     {subtitle}
                                 </CardDescription>
