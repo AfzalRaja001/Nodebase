@@ -3,6 +3,7 @@ import { NonRetriableError } from "inngest";
 import ky, { type Options as KyOptions} from "ky";
 import Handlebars from "handlebars"; 
 import { Handle } from "vaul";
+import { httpRequestChannel } from "@/inngest/channels/http-request";
 
 Handlebars.registerHelper("json", function(context) {
     const stringified = JSON.stringify(context, null, 2);
@@ -21,11 +22,31 @@ export const httpRequestExecutor : NodeExecutor<HttpRequestData> = async ({
     nodeId,
     context,
     step,
+    publish,
 }) => {
+    await publish(
+        httpRequestChannel().status({
+            nodeId,
+            status : "loading",
+        })
+    )
+
     if(!data.endpoint || !data.method){
+        await publish(
+        httpRequestChannel().status({
+            nodeId,
+            status : "error",
+        })
+    )
         throw new NonRetriableError("Endpoint and method are required for HTTP Request node");
     }
     if(!data.variableName){
+        await publish(
+        httpRequestChannel().status({
+            nodeId,
+            status : "error",
+        })
+    )
         throw new NonRetriableError("Variable name is required to store the HTTP response");
     }
     if(!data.method){
@@ -45,7 +66,7 @@ export const httpRequestExecutor : NodeExecutor<HttpRequestData> = async ({
                 "Content-Type": "application/json",
             }
         }
-
+        
         const response = await ky(endpoint, options);
         const contentType = response.headers.get("content-type") ;
         const responseData = contentType?.includes("application/json") ? await response.json() : await response.text();
@@ -61,6 +82,14 @@ export const httpRequestExecutor : NodeExecutor<HttpRequestData> = async ({
             [data.variableName]: responsePayload,
         }
     });
+
+    await publish(
+        httpRequestChannel().status({
+            nodeId,
+            status : "success",
+        })
+    )
+
 
     return result;
 };

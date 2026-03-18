@@ -5,6 +5,10 @@ import { memo, useState } from "react";
 import { BaseExecutionNode } from "../base-execution-node";
 import { GlobeIcon } from "lucide-react";
 import { HttpRequestFormValues, HttpRequestDialog } from "./dialog";
+import { HTTP_REQUEST_CHANNEL_NAME, httpRequestChannel } from "@/inngest/channels/http-request";
+import { topic } from "@inngest/realtime";
+import { fetchHttpRequestRealtimeToken } from "./actions";
+import { useNodeStatus } from "../../hooks/use-node-status";
 
 type HttpRequestNodeData = {
     variableName?: string;
@@ -19,7 +23,12 @@ export const HttpRequestNode = memo((props : NodeProps<HttpRequestNodeType>) => 
     const [dialogOpen, setDilogOpen] = useState(false);
     const {setNodes} = useReactFlow();
 
-    const nodeStatus = "loading" 
+    const nodeStatus = useNodeStatus({
+        nodeId: props.id,
+        channel : HTTP_REQUEST_CHANNEL_NAME,
+        topic : "status",
+        refreshToken : fetchHttpRequestRealtimeToken,
+    })
     const handleOpenSettings = () => setDilogOpen(true);
 
     const handleSubmit = (values: HttpRequestFormValues) => {
