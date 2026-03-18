@@ -1,14 +1,40 @@
 import { createTRPCRouter, premiumProcedure,  protectedProcedure } from "@/trpc/init";
 import prisma from "@/lib/db";
 import { generateSlug } from "random-word-slugs";
-import z, { positive } from "zod";
+import z, { fromJSONSchema, positive } from "zod";
 import { PAGINATION } from "@/config/constants";
 import {NodeType} from "@/generated/prisma/client";
-import { X } from "lucide-react";
-import type {Node, Edge } from "@xyflow/react";
+import { Target, Toilet, Workflow, X } from "lucide-react";
+import {type Node, type Edge, Position } from "@xyflow/react";
 import { id } from "date-fns/locale";
+import { inngest } from "@/inngest/client";
+import { TRPCError } from "@trpc/server";
 
 export const workflowsRouter = createTRPCRouter({
+    execute : protectedProcedure
+        .input(z.object({id : z.string()}))
+        .mutation( async ({input, ctx}) => {
+            const workflow = await prisma.workflow.findUnique({
+                where : {
+                    id : input.id,
+                    userId : ctx.auth.user.id,
+                },
+            });
+
+            if(!workflow){
+                throw new TRPCError({
+                    code : "NOT_FOUND",
+                    message : "Workflow not found",
+                });
+            }
+            
+            await inngest.send({
+                name : "workflows/execute.workflow",
+                data : {workflowId : workflow.id},
+            })
+
+            return workflow;
+        }),
     create : premiumProcedure.mutation(({ctx}) => {
         return prisma.workflow.create({
             data : {
@@ -36,6 +62,81 @@ export const workflowsRouter = createTRPCRouter({
         })
     }),
 
+    update : protectedProcedure
+     .input(z.object({id : z.string(), nodes: z.array(
+        z.object({
+            id: z.string(),
+            type: z.string().nullish(),
+            position: z.object({x: z.number(), y: z.number()}),
+            data: z.record(z.string(), z.any()).optional(),
+        }),
+     ),
+     edges : z.array(
+        z.object({
+            source: z.string(),
+            target: z.string(),
+            sourceHandle: z.string().nullish(),
+            targetHandle: z.string().nullish(),
+        })
+     )
+    }))
+     .mutation(async ({ctx, input}) => {
+        const {id, nodes, edges} = input;
+
+        const workflow = await prisma.workflow.findUnique({
+            where : {
+                id, userId : ctx.auth.user.id,
+            },
+        });
+
+        if(!workflow){
+            throw new TRPCError({
+                code : "NOT_FOUND",
+                message : "Workflow not found",
+            });
+        }
+
+        return await prisma.$transaction(async (tx) => {
+            // Delete existing nodes and connections
+            await tx.node.deleteMany({
+                where: {
+                    workflowId: id,
+                }
+            });
+
+            // Create new nodes
+            await tx.node.createMany({
+                data: nodes.map((node) => ({
+                    id: node.id,
+                    workflowId: id,
+                    name: node.type || "unknown",
+                    type: node.type as NodeType,
+                    position: node.position,
+                    data: node.data || {}, 
+                })),
+            });
+
+            // Create new connections
+            await tx.connection.createMany({
+                data: edges.map((edge) => ({
+                    workflowId: id,
+                    fromNodeId: edge.source,
+                    toNodeId: edge.target,
+                    fromOutput: edge.sourceHandle || "main",
+                    toInput: edge.targetHandle || "main",
+                })),
+            });
+
+            // update workflow's updatedAt
+            await tx.workflow.update({
+                where : { id },
+                data : {updatedAt : new Date()},    
+            });
+
+            return workflow;
+        });
+      }),
+ 
     updateName : protectedProcedure
      .input(z.object({id : z.string(), name : z.string().min(1)}))
      .mutation(({ctx, input}) => {
@@ -52,13 +153,20 @@ export const workflowsRouter = createTRPCRouter({
       getOne : protectedProcedure
         .input(z.object({id : z.string()}))
         .query(async ({ctx, input}) => {
-            const workflow = await prisma.workflow.findUniqueOrThrow ({
+            const workflow = await prisma.workflow.findUnique ({
                 where : {
                     id : input.id,
                     userId : ctx.auth.user.id,
                 },
                 include:{nodes: true, connections: true},
             });
+
+            if(!workflow){
+                throw new TRPCError({
+                    code : "NOT_FOUND",
+                    message : "Workflow not found",
+                });
+            }
 
             const nodes : Node[] = workflow.nodes.map((node) => ({
                 id: node.id,

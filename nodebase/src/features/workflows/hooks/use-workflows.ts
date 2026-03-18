@@ -81,3 +81,44 @@ export const useUpdateWorkflowName = () => {
         })
     );
 };
+
+export const useUpdateWorkflow = () => {
+    const queryClient = useQueryClient();
+    const trpc = useTRPC()
+
+    return useMutation(
+        trpc.workflows.update.mutationOptions({
+            onSuccess : (data) => {
+                toast.success(`Workflow "${data.name}" saved`);
+
+                queryClient.invalidateQueries(
+                    trpc.workflows.getMany.queryOptions({}),
+                );
+                queryClient.invalidateQueries(
+                    trpc.workflows.getOne.queryOptions({id: data.id}),
+                );
+            },
+            onError: (error) => {
+                toast.error(`Failed to save Workflow: ${error.message}`); 
+            }
+        })
+    );
+};
+
+/* 
+    Hook to execute the workflow
+*/
+export const useExecuteWorkflow = () => {
+    const trpc = useTRPC()
+
+    return useMutation(
+        trpc.workflows.execute.mutationOptions({
+            onSuccess : (data) => {
+                toast.success(`Workflow "${data.name}" executed`);
+            },
+            onError: (error) => {
+                toast.error(`Failed to execute Workflow: ${error.message}`); 
+            }
+        })
+    );
+};
