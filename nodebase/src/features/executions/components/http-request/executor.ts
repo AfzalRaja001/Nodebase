@@ -1,12 +1,18 @@
 import { NodeExecutor } from "@/features/executions/types";
-import { da } from "date-fns/locale";
 import { NonRetriableError } from "inngest";
 import ky, { type Options as KyOptions} from "ky";
+import Handlebars from "handlebars"; 
+import { Handle } from "vaul";
+
+Handlebars.registerHelper("json", function(context) {
+    const stringified = JSON.stringify(context, null, 2);
+    return new Handlebars.SafeString(stringified); ;
+});
 
 type HttpRequestData = {
-    variableName?: string;
-    endpoint?: string;
-    method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+    variableName: string;
+    endpoint: string;
+    method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
     body?: string;
 }
 
@@ -22,14 +28,19 @@ export const httpRequestExecutor : NodeExecutor<HttpRequestData> = async ({
     if(!data.variableName){
         throw new NonRetriableError("Variable name is required to store the HTTP response");
     }
+    if(!data.method){
+        throw new NonRetriableError("HTTP method is required");
+    }
     const result = await step.run("http-request", async () => {
         const method = data.method || "GET";
-        const endpoint = data.endpoint!;
+        const endpoint = Handlebars.compile(data.endpoint)(context);
 
         const options : KyOptions = {method};
 
         if(["POST", "PUT", "PATCH"].includes(method) ){
-            options.body = data.body;
+            const resolved = Handlebars.compile(data.body || "{}")(context);
+            JSON.parse(resolved); // validate JSON
+            options.body = resolved;
             options.headers = {
                 "Content-Type": "application/json",
             }
@@ -44,17 +55,10 @@ export const httpRequestExecutor : NodeExecutor<HttpRequestData> = async ({
                 statusText: response.statusText,
                 data: responseData,
             },
-        }
-        if(data.variableName){
-            return {
-                ...context,
-                [data.variableName]: responsePayload,
-            }
-        }
-        // Fallback to direct httpResponse for backwards compatibility
+        };
         return {
             ...context,
-            ...responsePayload,
+            [data.variableName]: responsePayload,
         }
     });
 
