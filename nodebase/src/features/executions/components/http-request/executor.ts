@@ -11,9 +11,9 @@ Handlebars.registerHelper("json", function(context) {
 });
 
 type HttpRequestData = {
-    variableName: string;
-    endpoint: string;
-    method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+    variableName?: string;
+    endpoint?: string;
+    method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
     body?: string;
 }
 
@@ -31,7 +31,9 @@ export const httpRequestExecutor : NodeExecutor<HttpRequestData> = async ({
         })
     )
 
-    if(!data.endpoint || !data.method){
+    
+    const result = await step.run("http-request", async () => {
+        if(!data.endpoint || !data.method){
         await publish(
         httpRequestChannel().status({
             nodeId,
@@ -52,7 +54,6 @@ export const httpRequestExecutor : NodeExecutor<HttpRequestData> = async ({
     if(!data.method){
         throw new NonRetriableError("HTTP method is required");
     }
-    const result = await step.run("http-request", async () => {
         const method = data.method || "GET";
         const endpoint = Handlebars.compile(data.endpoint)(context);
 
