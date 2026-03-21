@@ -112,6 +112,7 @@ enum NodeType{
   ANTHROPIC
   GEMINI
   OPENAI
+  DISCORD
 }
 
 model Node{

@@ -8,6 +8,7 @@ import { OpenAINode } from "@/features/executions/components/openai/node";
 import { AnthropicNode } from "@/features/executions/components/anthropic/node";
 import { NodeType } from "@/generated/prisma/enums";
 import { NodeTypes } from "@xyflow/react";
+import { DiscordNode } from "@/features/executions/components/discord/node";
 
 export const nodeComponents = {
     [NodeType.INITIAL] : InitialNode,
@@ -18,6 +19,7 @@ export const nodeComponents = {
     [NodeType.GEMINI] : GeminiNode,
     [NodeType.OPENAI] : OpenAINode,
     [NodeType.ANTHROPIC] : AnthropicNode,
+    [NodeType.DISCORD] : DiscordNode,
 } as const satisfies NodeTypes;
 
 export type RegisteredNodeTypes = keyof typeof nodeComponents;

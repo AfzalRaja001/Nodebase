@@ -63,6 +63,12 @@ const executionNodes : NodeTypeOption[] = [
         description : "Interact with the Anthropic API",
         icon: "/logos/anthropic.svg",
     },
+    {
+        type : NodeType.DISCORD,
+        label : "Discord",
+        description : "Interact with the Discord API",
+        icon: "/logos/discord.svg",
+    },
 ];
 
 interface NodeSelectorProps {
