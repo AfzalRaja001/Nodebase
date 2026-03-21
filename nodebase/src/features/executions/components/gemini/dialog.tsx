@@ -11,6 +11,8 @@ import { Form } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { useEffect } from "react";
+import { useCredentialByType } from "@/features/credentials/hooks/use-credentials";
+import { CredentialType } from "@/generated/prisma/enums";
 
 const AVAILABLE_MODELS = [
     "gemini-1.5-pro",
@@ -29,6 +31,7 @@ const formSchema = z.object({
     model : z.string().min(1, {message: "Model is required"}),  
     systemPrompt: z.string().optional(),
     userPrompt: z.string().min(1, {message: "User prompt is required"}),
+    credentialId : z.string().min(1, {message: "Credential is required"}),
     body: z.
         string()
         .optional()
@@ -45,6 +48,8 @@ interface Props{
 };
 
 export const GeminiDialog    = ({ open, onOpenChange, onSubmit, defaultvalues }: Props) => {
+    const {data : credentials, isLoading : isLoadingCredentials} = useCredentialByType(CredentialType.GEMINI);
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -52,6 +57,7 @@ export const GeminiDialog    = ({ open, onOpenChange, onSubmit, defaultvalues }:
             model: defaultvalues?.model || AVAILABLE_MODELS[0],
             systemPrompt: defaultvalues?.systemPrompt,
             userPrompt: defaultvalues?.userPrompt,
+            credentialId: defaultvalues?.credentialId,
         },
     });
 
@@ -62,6 +68,7 @@ export const GeminiDialog    = ({ open, onOpenChange, onSubmit, defaultvalues }:
                 model: defaultvalues?.model || AVAILABLE_MODELS[0],
                 systemPrompt: defaultvalues?.systemPrompt,
                 userPrompt: defaultvalues?.userPrompt,
+                credentialId: defaultvalues?.credentialId,
             }); 
         }
     }, [open, defaultvalues, form]);
@@ -86,6 +93,30 @@ export const GeminiDialog    = ({ open, onOpenChange, onSubmit, defaultvalues }:
                         onSubmit={form.handleSubmit(handleSubmit)}
                         className="space-y-8 mt-4"
                     >
+                    <FormField 
+                        control={form.control}
+                        name="credentialId"
+                        render = {({field}) => (
+                            <FormItem>
+                                <FormLabel>Credential</FormLabel>
+                                <FormControl>
+                                    <Select {...field} onValueChange={field.onChange} defaultValue={field.value} disabled={isLoadingCredentials || credentials?.length === 0}>
+                                        <SelectTrigger className="w-full ">
+                                            <SelectValue placeholder="Select a credential" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {credentials?.map((credential) => (
+                                                <SelectItem key={credential.id} value={credential.id}>
+                                                    {credential.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />    
                         <FormField
                             control={form.control}
                             name="variableName"
@@ -107,7 +138,7 @@ export const GeminiDialog    = ({ open, onOpenChange, onSubmit, defaultvalues }:
                                 </FormItem>
                             ) }
                         />
-                    
+                        
                             <FormField
                                 name="systemPrompt"
                                 control={form.control}

@@ -22,10 +22,8 @@ import{
 import Image from "next/image";
 import Link from "next/link";
 import {usePathname, useRouter} from "next/navigation";
-import { title } from "process";
 
 import { authClient } from "@/lib/auth-client";
-import { slugify } from "zod";
 import { useHasActiveSubscription} from "@/features/subscriptions/hooks/use-subscription";
 
 const menuItems = [
