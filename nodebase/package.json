@@ -10,7 +10,8 @@
     "format": "biome format --write",
     "inngest:dev": "inngest-cli dev",
     "dev:all": "mprocs",
-    "ngrok:dev": "ngrok http --url=nonlicentious-lana-unmangled.ngrok-free.dev 3000"
+    "ngrok:dev": "ngrok http --url=nonlicentious-lana-unmangled.ngrok-free.dev 3000",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.36",
