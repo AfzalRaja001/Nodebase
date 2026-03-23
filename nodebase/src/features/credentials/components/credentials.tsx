@@ -6,7 +6,7 @@ import { useEntitySearch } from "@/hooks/use-entity-search";
 import {formatDistanceToNow} from "date-fns";
 import { useCreateCredential, useRemoveCredential, useSuspenseCredentials } from "../hooks/use-credentials";
 import { useCredentialParams } from "../hooks/use-credentials-params";
-import { ShieldIcon } from "lucide-react";
+import { KeyRoundIcon, KeyRound, ShieldIcon } from "lucide-react";
 import type { Credential } from "@/generated/prisma/client";
 
 export const CredentialsSearch = () => {
@@ -127,7 +127,7 @@ export const CredentialItem = ({data}: {data: Credential}) => {
             }
             image = {
                 <div className="size-8 flex items-center justify-center">
-                    <ShieldIcon className="size-5 text-muted-foreground"/>
+                    <KeyRoundIcon className="size-5 text-muted-foreground"/>
                 </div>
             }
             onRemove={handleRemove}

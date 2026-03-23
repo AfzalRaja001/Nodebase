@@ -18,7 +18,7 @@ import { DropdownMenuContent, DropdownMenuItem } from "./ui/dropdown-menu";
 type EntityHeaderProps = {
     title: string;
     description?: string;
-    newButtonLabel: string;
+    newButtonLabel?: string;
     disabled?: boolean;
     isCreating?: boolean;
 } & (
@@ -64,7 +64,7 @@ export const EntityHeader = ({
 type EntityContainerProps = {
     children: React.ReactNode;
     header: React.ReactNode;
-    serach: React.ReactNode;
+    serach?: React.ReactNode;
     pagination: React.ReactNode;
 };
 
